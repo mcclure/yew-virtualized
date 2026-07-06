@@ -265,6 +265,7 @@ impl ScrollManager {
         }
     }
 
+    // Scroll pin to bottom logic comes from https://css-tricks.com/books/greatest-css-tricks/pin-scrolling-to-bottom/
     fn generate_contents(&self, props: &VirtualListProps) -> Html {
         let EffectiveScrollState {
             first_idx,
@@ -273,10 +274,25 @@ impl ScrollManager {
             hidden_after,
         } = self.scroll_state;
 
+        hidden_after
+        let autoscroll_latch = matches!(props.autoscroll, AutoscrollMode::BottomLatch);
+        let hidden_after_plus = if autoscroll_latch { 1 } else { 0 };
+        let (regularStyleExtra, postStyleExtra) = if autoscroll_latch && hidden_after == 0 {
+            (
+                Some("overflow-anchor: none;"),
+                Some("overflow-anchor: auto;")
+            )
+        } else {
+            (
+                None
+                None
+            )
+        }
+
         let items = (first_idx..past_last_idx).map(|i| {
             let item = props.items.emit(i);
             html! {
-                <ScrollItemWrapper key={i} pos={i} observer={&self.observer} classes={props.item_classes.clone()}>
+                <ScrollItemWrapper key={i} pos={i} observer={&self.observer} classes={props.item_classes.clone()} style={wrapperStyle}>
                     {item}
                 </ScrollItemWrapper>
             }
@@ -284,16 +300,23 @@ impl ScrollManager {
 
         html! {
             <>
-            <div key="pre" style={format!("height: {hidden_before}px;")}>
+            <div key="pre" style={format!("height: {hidden_before}px;{regularStyleExtra}")}>
             </div>
-            <div key="wrap" style={"display: contents;"}>
+            <div key="wrap" style={format!("display: contents;{regularStyleExtra}")}>
             {for items}
             </div>
-            <div key="post" style={format!("height: {hidden_after}px;")}>
+            <div key="post" style={format!("height: {hidden_after+hidden_after_plus}px;{postStyleExtra}")}>
             </div>
             </>
         }
     }
+}
+
+/// Options for autoscroll property
+#[derive(Default, Debug)]
+enum AutoscrollMode {
+    None
+    BottomLatch,
 }
 
 /// Properties for a [`VirtualList`].
