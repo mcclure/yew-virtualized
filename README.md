@@ -1,3 +1,7 @@
+This branch contains a fork of yew-virtualized which drops the virtualization.
+
+I have created this as a testbed for a new "autoscroll" feature in yew-virtualized.
+
 ## yew-virtualized
 
 A `VirtualList` yew component that renders only the visible part of a scrollable list.
